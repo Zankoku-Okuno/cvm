@@ -71,8 +71,6 @@ atomicMemoryController chan = do
 
 data Thread = Thread
     { ip :: Int
-    , fp :: Word
-    , sp :: Word
     , spLimit :: Word -- where there's a stack overflow
     , gprs :: RegisterFile
     , machine :: Machine
@@ -80,8 +78,6 @@ data Thread = Thread
 instance Show Thread where
     show Thread{..} = concat [
           "Thread{ip = ", showHex ip "", ", "
-        , "fp = ", showHex fp "", ", "
-        , "sp = ", showHex sp "", ", "
         , "spLimit = ", showHex spLimit ""
         , "}"
         ]
@@ -104,8 +100,6 @@ runRoot machine@Machine{..} = modifyMVar threads $ \case
         gprs <- newRegisterFile
         let root = Thread
                     { ip = 0
-                    , fp = 0
-                    , sp = 0
                     , spLimit = maxBound - rootStackSize config + 1 -- FIXME ask memory for this
                     , gprs = gprs
                     , machine = machine

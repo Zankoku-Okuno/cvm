@@ -35,22 +35,21 @@ maxValue AddrSize = fromIntegral (maxBound :: Word)
 
 
 data Operand =
-      Immediate LBS.ByteString
-    | GPR Word8
-    | Deferred Operand -- TODO
-    -- Absolute = Deferred . Immediate
-    | FpRel Int
-    | SpRel Int
+      Immediate LBS.ByteString -- imm
+    | GPR Word8 -- R[x]
+    | Offset Word8 Int -- M[R[x] + offset]
+    | Deferred Operand -- M[imm], M[R[x]], M[M[R[x] + offset]]
 
 
 ------ load effective address ------
 
 lea :: Thread -> Operand -> IO Word
-lea thread (Immediate _)  = error "immediate operands have no address"
-lea thread (GPR _)        = error "registers have no address"
+lea thread (Immediate _) = error "immediate operands have no address"
+lea thread (GPR _) = error "registers have no memory address"
+lea thread (Offset reg offset) = do
+    base <- ldu thread (AddrSize, GPR reg)
+    pure $ base + fromIntegral offset
 lea thread (Deferred ptr) = ldu thread (AddrSize, ptr)
-lea thread (FpRel offset) = pure $ fp thread + fromIntegral offset
-lea thread (SpRel offset) = pure $ sp thread + fromIntegral offset
 
 
 ------ load/store bytes ------

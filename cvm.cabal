@@ -19,6 +19,7 @@ executable cvm
   main-is:             Main.hs
   other-modules:
     Addressing,
+    InstructionSet,
     Machine,
     Memory,
     Registers
@@ -32,6 +33,7 @@ executable cvm
   default-language:    Haskell2010
   default-extensions:
     LambdaCase,
+    OverloadedStrings,
     RecordWildCards,
     ScopedTypeVariables
   -- other-extensions:    
