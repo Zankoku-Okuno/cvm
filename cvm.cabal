@@ -35,5 +35,6 @@ executable cvm
     LambdaCase,
     OverloadedStrings,
     RecordWildCards,
-    ScopedTypeVariables
+    ScopedTypeVariables,
+    ViewPatterns
   -- other-extensions:    

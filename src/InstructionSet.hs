@@ -1,7 +1,9 @@
 module InstructionSet where
 
+import Data.Word
 import Data.Bits
 import Numeric.Natural
+import qualified Data.ByteString.Lazy as LBS
 
 import Addressing
 import Machine
@@ -16,24 +18,34 @@ mov :: Scale -> Operand -> Operand -> Instr
 mov scale src dst = passThrough $ \thread ->
     ldb thread (scale, src) >>= stb thread (scale, dst)
 
-swap :: Scale -> Operand -> Operand -> Instr
-swap scale a b = passThrough $ \thread -> do
+xchg :: Scale -> Operand -> Operand -> Instr
+xchg scale a b = passThrough $ \thread -> do
     tmpA <- ldb thread (scale, a)
     tmpB <- ldb thread (scale, b)
     stb thread (scale, a) tmpB
     stb thread (scale, b) tmpA
 
+lea :: Operand -> Operand -> Instr
+lea src dst = passThrough $ \thread -> do
+    addr <- addrOf thread src
+    stu thread (AddrSize, dst) addr
+
 
 ------ jumping ------
 
 jmp :: Operand -> Instr
-jmp src@(Immediate _) thread = do -- absolute jump
+jmp src@(Immediate _) thread = do -- relative jump
     offset <- lds thread (AddrSize, src)
     let ip' = ip thread + offset
     pure $ Just thread{ip = ip'}
-jmp src thread = do
+jmp src thread = do -- (computed) absolute jump
     ip' <- lds thread (AddrSize, src)
     pure $ Just thread{ip = ip'}
+
+link :: Operand -> Operand -> Instr
+link src dst thread = do
+    stu thread (AddrSize, dst) (ip thread)
+    jmp src thread
 
 jmp_cond_signed_ :: (Integer -> Integer -> Bool) -> Operand -> Scale -> Operand -> Operand -> Instr
 jmp_cond_signed_ cond j scale srcA srcB thread = do
@@ -72,8 +84,6 @@ jmp_a :: Operand -> Scale -> Operand -> Operand -> Instr
 jmp_a = jmp_cond_signed_ (>)
 jmp_ae :: Operand -> Scale -> Operand -> Operand -> Instr
 jmp_ae = jmp_cond_signed_ (>=)
-
--- TODO call? tailcall? return?
 
 
 ------  logic ------
@@ -149,19 +159,61 @@ rot src scale dst = passThrough $ \thread -> do
         backAmount = (if amount < 0 then ((-1)*) else id) (8 * scaleFactor scale)
     stu thread (scale, dst) c
 
--- TODO n-byte swaps
-    -- reverse bytes
-    -- reverse dbl bytes
-    -- reverse quad bytes
+swap :: Scale -> Scale -> Operand -> Instr
+swap by scale dst = passThrough $ \thread -> do
+    a <- ldb thread (scale, dst)
+    let c = LBS.concat . reverse $ breakParts by a
+    stb thread (scale, dst) c
 
 
 ------  bit twiddle ------
 
--- TODO bit twiddling:
-    -- bit test/set
-    -- mask on/off low/high
-    -- popcount, parity
-    -- (find first/last)/(count leading/trailing) set/zero
+bt :: Operand -> Scale -> Operand -> Operand -> Instr
+bt i scale src dst = passThrough $ \thread -> do
+    i <- ldu thread (Byte, i)
+    a <- ldu thread (scale, src)
+    let c :: Word8 = if (a :: Natural) `testBit` i then 1 else 0
+    stu thread (Byte, dst) c
+
+bs :: Operand -> Scale -> Operand -> Instr
+bs i scale dst = passThrough $ \thread -> do
+    i <- ldu thread (Byte, i)
+    a <- ldu thread (scale, dst)
+    let c :: Natural = a `setBit` i
+    stu thread (scale, dst) c
+
+popcnt :: Scale -> Operand -> Operand -> Instr
+popcnt scale src dst = passThrough $ \thread -> do
+    a <- ldu thread (scale, src)
+    let c :: Natural = fromIntegral $ case (scale, a :: Natural) of
+            (Byte, fromIntegral -> (a :: Word8)) -> popCount a
+            (DblByte, fromIntegral -> (a :: Word16)) -> popCount a
+            (QuadByte, fromIntegral -> (a :: Word32)) -> popCount a
+            (OctByte, fromIntegral -> (a :: Word64)) -> popCount a
+            (AddrSize, fromIntegral -> (a :: Word)) -> popCount a
+    stu thread (Byte, dst) c
+
+clz :: Scale -> Operand -> Operand -> Instr
+clz scale src dst = passThrough $ \thread -> do
+    a <- ldu thread (scale, src)
+    let c :: Natural = fromIntegral $ case (scale, a :: Natural) of
+            (Byte, fromIntegral -> (a :: Word8)) -> countLeadingZeros a
+            (DblByte, fromIntegral -> (a :: Word16)) -> countLeadingZeros a
+            (QuadByte, fromIntegral -> (a :: Word32)) -> countLeadingZeros a
+            (OctByte, fromIntegral -> (a :: Word64)) -> countLeadingZeros a
+            (AddrSize, fromIntegral -> (a :: Word)) -> countLeadingZeros a
+    stu thread (Byte, dst) c
+
+ctz :: Scale -> Operand -> Operand -> Instr
+ctz scale src dst = passThrough $ \thread -> do
+    a <- ldu thread (scale, src)
+    let c :: Natural = fromIntegral $ case (scale, a :: Natural) of
+            (Byte, fromIntegral -> (a :: Word8)) -> countTrailingZeros a
+            (DblByte, fromIntegral -> (a :: Word16)) -> countTrailingZeros a
+            (QuadByte, fromIntegral -> (a :: Word32)) -> countTrailingZeros a
+            (OctByte, fromIntegral -> (a :: Word64)) -> countTrailingZeros a
+            (AddrSize, fromIntegral -> (a :: Word)) -> countTrailingZeros a
+    stu thread (Byte, dst) c
 
 
 ------ integer arithmetic ------
@@ -198,13 +250,13 @@ sub scale src dst carry = passThrough $ \thread -> do
 -- TODO integer operations
 -- mul/div and imul/idiv (two outputs each)
 -- signed/unsigned compare (boolean not is just cmp_eq R0)
+-- TODO BCD/packed BCD?
 
 
 ------ floating-point arithmetic ------
 
 -- TODO float operations
 -- TODO logarithmic number system?
--- TODO BCD/packed BCD?
 
 
 ------ conversion ------
@@ -221,9 +273,10 @@ sext scaleA a scaleB b = passThrough $ \thread -> do
 
 -- TODO conversions (float <-> fixed)
 
+
 ------ atomics ------
 
--- TODO atomics (CAS, atomic inc/add)
+-- TODO atomics (CAS, atomic inc/add, xchg)
 
 
 ------ system ------

@@ -55,16 +55,26 @@ main = do
                 , sub Byte (Immediate $ encode (0::Word8)) (GPR 1) (GPR 2) -- a -= 0
                 -- , pauseAndPrint Byte (GPR 1)
                 -- , pauseAndPrint Byte (GPR 2)
-                -- , mov DoubleByte (Immediate $ encode (3::Word16)) (Offset sp_reg (-2))
+                -- , mov DblByte (Immediate $ encode (3::Word16)) (Offset sp_reg (-2))
                 , mov Byte (Immediate $ encode (0::Word8)) (Offset sp_reg (-3))
                 , sub Byte (Immediate $ encode (1::Word8)) (Offset sp_reg (-1)) (Offset sp_reg (-3))
                 , sub Byte (Immediate $ encode (0::Word8)) (Offset sp_reg (-2)) (Offset sp_reg (-3))
                 , jmp_eq (Immediate $ encode (1::Int)) Byte (GPR 0) (Offset sp_reg (-3))
                 , mov Byte (Immediate $ encode (0xff::Word8)) (Offset sp_reg (-3))
-                , sext Byte (Offset sp_reg (-3)) DoubleByte (Offset sp_reg (-4))
+                , sext Byte (Offset sp_reg (-3)) DblByte (Offset sp_reg (-4))
                 , neg QuadByte (Offset sp_reg (-4)) (Offset sp_reg (-8))
+                
                 , mov Byte (Immediate $ encode (0x81::Word8)) (Offset sp_reg (-9))
                 , rot (Immediate $ encode (-1::Int8)) Byte (Offset sp_reg (-9))
+
+                , mov OctByte (Immediate $ encode (0x0102030405060708::Word64)) (Deferred $ Immediate $ encode (0::Word))
+                , swap Byte OctByte (Deferred $ Immediate $ encode (0::Word))
+                , swap DblByte OctByte (Deferred $ Immediate $ encode (0::Word))
+                , popcnt OctByte (Deferred $ Immediate $ encode (0::Word)) (Deferred $ Immediate $ encode (8::Word))
+
+                , mov Byte (Immediate $ encode (0x78::Word8)) (Deferred $ Immediate $ encode (0x10::Word))
+                , clz Byte (Deferred $ Immediate $ encode (0x10::Word)) (Deferred $ Immediate $ encode (0x11::Word))
+                , ctz Byte (Deferred $ Immediate $ encode (0x10::Word)) (Deferred $ Immediate $ encode (0x12::Word))
                 , retireThread
                 ]
         config = MemConfig
