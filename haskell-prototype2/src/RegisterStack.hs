@@ -12,8 +12,9 @@ import Memory
 
 {-
                                ___________
-                           0  |
-                           1  |
+                           0  | fixed
+                              |___________
+               _numFixedRegs  |
                               |___________
                  _windowBase  |
                               | window
@@ -21,10 +22,6 @@ import Memory
 _windowBase + _numWindowRegs  |
                               |
                               |
-                              |
-                              |___________
-    _numRegs - _numFixedRegs  |
-                              | fixed regs
                               |___________
                     _numRegs
 -}
@@ -52,7 +49,7 @@ newRegisterStack (_registerSize, _numRegs, _numAvailableRegs, _numFixedRegs) = d
     when (any not preconditions) $ error "bad RegisterStack configuration"
     let _numWindowRegs = _numAvailableRegs - _numFixedRegs
     _regs <- newMemory (fromIntegral $ _registerSize * _numRegs)
-    _windowBase <- newIORef 0
+    _windowBase <- newIORef _numFixedRegs
     pure Regs{..}
     where
     preconditions =
@@ -69,8 +66,8 @@ setWindow Regs{..} fp' = do
     writeIORef _windowBase fp'
     where
     postconditions fp' =
-        [ fp' >= 0
-        , fp' + _numWindowRegs <= _numRegs - _numFixedRegs
+        [ fp' >= _numFixedRegs
+        , fp' + _numWindowRegs <= _numRegs
         ]
 
 moveWindow :: RegisterStack -> Int -> IO ()
@@ -98,10 +95,10 @@ putReg put regs@Regs{..} i x = do
 _registerAddress :: RegisterStack -> (Int, Int) -> IO Addr
 _registerAddress Regs{..} (i, size) = do
     when (any not preconditions) $ error "register access fault"
-    let inWindow = (i +) <$> readIORef _windowBase
-        inFixed = pure $ (_numRegs - _numFixedRegs) + (i - _numWindowRegs)
+    let inFixed = pure $ i
+        inWindow = ((i - _numFixedRegs) +) <$> readIORef _windowBase
         offsetInReg = _registerSize - size
-    regAddr <- if i < _numWindowRegs then inWindow else inFixed
+    regAddr <- if i < _numFixedRegs then inFixed else inWindow
     pure $ _registerSize * regAddr + offsetInReg
     where
     preconditions =

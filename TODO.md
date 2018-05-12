@@ -61,6 +61,7 @@ Are all arithmetic operations safe?
           * [ ] Register Files (per-processor)
           * I/O Ports (unified interface for all external communication)
           * [ ] Machine Metadata
+          * [ ] Asynchronous Interrupts
       * Core Algorithms
           * Moving Memory
           * Arithmetic/Logic

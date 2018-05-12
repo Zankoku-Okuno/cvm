@@ -28,7 +28,7 @@ main = do
     rf <- newRegisterStack (4, 16, 8, 2)
     sequence_ [putReg putWord8 rf i (10 + fromIntegral i) | i <- [0 .. 7]]
     moveWindow rf 7
-    sequence_ [putReg putWord8 rf i (0xF0 + fromIntegral i) | i <- [0 .. 5]]
+    sequence_ [putReg putWord8 rf (i + 2) (0xF0 + fromIntegral i) | i <- [0 .. 5]]
     putStrLn =<< dumpSlice (_regs rf) (0, 16*4)
 
 data Metadata = Metadata
