@@ -19,7 +19,8 @@ executable prokaryote-vm
   main-is:             Main.hs
   other-modules:
     Memory,
-    Memory.Base
+    Memory.Base,
+    RegisterStack
   -- other-extensions:    
   build-depends:
     array ==0.5.*,
@@ -30,4 +31,5 @@ executable prokaryote-vm
   default-language:    Haskell2010
   default-extensions:
     RecordWildCards,
-    ScopedTypeVariables
+    ScopedTypeVariables,
+    ViewPatterns

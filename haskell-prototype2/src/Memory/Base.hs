@@ -17,47 +17,53 @@ import Foreign.Storable (Storable, sizeOf)
 import Data.Binary.Get
 import Data.Binary.Put
 
+import Control.Monad
+
 type Byte = Word8
-type Addr = Word
+type Addr = Int
 type Size = Word
-type Slice = (Addr, Addr) -- ^ start and end, inclusive
+type Slice = (Addr, Size)
 
 type Memory = IOUArray Addr Byte
 
 
 {-# INLINE readSlice #-}
 readSlice :: Memory -> Slice -> IO ByteString
-readSlice mem (start,end) = _checkRange mem (start,end) $
+readSlice mem (_toEndpoints -> (start,end)) = _checkRange mem (start,end) $
     LBS.pack <$> sequence [unsafeRead mem (fromIntegral i) | i <- [start .. end]]
 
 {-# INLINE writeSlice #-}
 writeSlice :: Memory -> Slice -> ByteString -> IO ()
-writeSlice mem (start,end) new = _checkRange mem (start,end) $
+writeSlice mem debug@(_toEndpoints -> (start,end)) new = _checkRange mem (start,end) $
     sequence_ [unsafeWrite mem (fromIntegral i) x | (i, x) <- zip [start .. end] (LBS.unpack new)]
 
 
 {-# INLINE newMemory #-}
 newMemory :: Size -> IO Memory
-newMemory size = newArray_ (0, size)
+newMemory size = newArray_ (0, fromIntegral size)
 
 {-# INLINE getMemory #-}
 getMemory :: forall a. Storable a => Get a -> Memory -> Addr -> IO a
 getMemory get mem addr = do
-    let size = fromIntegral $ sizeOf (undefined :: a)
-    bytes <- readSlice mem (addr, addr + size)
+    let size = sizeOf (undefined :: a)
+    bytes <- readSlice mem (addr, fromIntegral size)
     pure $ runGet get bytes
 
 {-# INLINE putMemory #-}
 putMemory :: Storable a => (a -> Put) -> Memory -> Addr -> a -> IO ()
 putMemory put mem addr x = do
     let bytes = runPut $ put x
-        size = fromIntegral $ LBS.length bytes
-    writeSlice mem (addr, addr + size) bytes
+        size = LBS.length bytes
+    writeSlice mem (addr, fromIntegral size) bytes
 
 
 {-# INLINE _checkRange #-}
-_checkRange :: Memory -> Slice -> IO a -> IO a
+_checkRange :: Memory -> (Addr, Addr) -> IO a -> IO a
 _checkRange mem (start, end) action = do
-    _ <- readArray mem start
-    _ <- readArray mem end
+    readArray mem start
+    readArray mem end
     action
+
+{-# INLINE _toEndpoints #-}
+_toEndpoints :: Slice -> (Addr, Addr)
+_toEndpoints (addr, size) = (addr, addr + fromIntegral size - 1)

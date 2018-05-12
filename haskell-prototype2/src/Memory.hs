@@ -26,7 +26,7 @@ import Data.Array.Base (unsafeRead)
 
 
 dumpSlice :: Memory -> Slice -> IO String
-dumpSlice mem (start,end) = format <$> access
+dumpSlice mem (_toEndpoints -> (start,end)) = format <$> access
     where
     access = _checkRange mem (start,end) $
         sequence [unsafeRead mem (fromIntegral i) | i <- [start .. end]]
