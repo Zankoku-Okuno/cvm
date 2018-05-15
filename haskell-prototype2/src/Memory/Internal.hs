@@ -5,7 +5,6 @@ Convenience functions for reading standard data types are provided theough the b
 -}
 module Memory.Internal where
 
-import Data.Word
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as LBS
 
@@ -13,19 +12,12 @@ import Data.Array.MArray
 import Data.Array.Base (unsafeRead, unsafeWrite)
 import Data.Array.IO
 
-import Foreign.Storable (Storable, sizeOf)
-import Data.Binary.Get
-import Data.Binary.Put
-
 import Control.Monad
 
-type Byte = Word8
-type Addr = Int
-type Size = Word
-type Slice = (Addr, Size)
+import Types
+
 
 type Memory = IOUArray Addr Byte
-
 
 {-# INLINE readSlice #-}
 readSlice :: Memory -> Slice -> IO ByteString

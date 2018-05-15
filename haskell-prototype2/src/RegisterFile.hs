@@ -5,13 +5,7 @@ module RegisterFile
     , setWindow, moveWindow, getReg, putReg
     ) where
 
-import Data.Word
-import Data.IORef
-
-import Foreign.Storable (Storable, sizeOf)
-import Data.Binary.Get
-import Data.Binary.Put
-
+import Types
 import RegisterStack (RegisterStack, newRegisterStack)
 import qualified RegisterStack as R
 

@@ -20,9 +20,11 @@ executable prokaryote-vm
   other-modules:
     Memory,
     Memory.Internal,
+    Metadata,
     RegisterFile,
     RegisterStack,
-    RegisterStack.Internal
+    RegisterStack.Internal,
+    Types
   -- other-extensions:    
   build-depends:
     array ==0.5.*,

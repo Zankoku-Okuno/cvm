@@ -4,10 +4,8 @@ import Numeric (showHex)
 import Data.ByteString.Lazy (ByteString)
 import qualified Data.ByteString.Lazy as LBS
 
-import Foreign.Storable (sizeOf)
-import Data.Binary.Get
-import Data.Binary.Put
-
+import Types
+import Metadata
 import Memory
 import RegisterStack
 import RegisterStack.Internal (_regs)
@@ -31,25 +29,3 @@ main = do
     moveWindow rf 7
     sequence_ [putReg putWord8 rf (i + 2) (0xF0 + fromIntegral i) | i <- [0 .. 5]]
     putStrLn =<< dumpSlice (_regs rf) (0, 16*4)
-
-data Metadata = Metadata
-    { addrSize :: !Int
-    , bigEndian :: !Bool
-    , bitSizes :: ![(Int, String)]
-    }
-
-hostMetadata :: Metadata
-hostMetadata = Metadata {..}
-    where
-    addrSize = sizeOf (undefined :: Addr)
-    bigEndian =
-        let testData = 1
-            written = runPut $ putWord16host testData
-            readBack = flip runGet written $ getWord16be
-        in readBack == testData
-    bitSizes =
-        [ (8 , "byte")
-        , (16, "wide")
-        , (32, "quad")
-        , (64, "oct" )
-        ]

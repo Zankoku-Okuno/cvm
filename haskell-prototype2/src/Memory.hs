@@ -1,9 +1,5 @@
 module Memory
     ( Memory
-    , Byte
-    , Addr
-    , Size
-    , Slice
      -- access/mutation with 'binary' package combinators
     , getMemory
     , putMemory
@@ -16,6 +12,7 @@ module Memory
     , dumpSlice
     ) where
 
+import Types
 import Memory.Internal
 
 import Numeric (showHex)

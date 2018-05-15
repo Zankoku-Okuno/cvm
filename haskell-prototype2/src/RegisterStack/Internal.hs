@@ -1,14 +1,9 @@
 -- TODO split into an internal and a clean export
 module RegisterStack.Internal where
 
-import Foreign.Storable (Storable, sizeOf)
-import Data.Binary.Get
-import Data.Binary.Put
-
-import Data.IORef
-
 import Control.Monad
 
+import Types
 import Memory
 
 {-
