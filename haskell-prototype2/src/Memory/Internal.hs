@@ -3,7 +3,7 @@ Data types and algorithms for working with a contiguous block of mutable bytes.
 
 Convenience functions for reading standard data types are provided theough the binary package.
 -}
-module Memory.Base where
+module Memory.Internal where
 
 import Data.Word
 import Data.ByteString.Lazy (ByteString)

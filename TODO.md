@@ -58,10 +58,15 @@ Are all arithmetic operations safe?
   * Interpreter
       * Core Data Structures
           * [ ] Global Memory
-          * [ ] Register Files (per-processor)
+          * [x] Register Files (per-processor)
           * I/O Ports (unified interface for all external communication)
           * [ ] Machine Metadata
-          * [ ] Asynchronous Interrupts
+          * [ ] Interrupts
+              * I/O
+              * Interprocessor
+              * Timer
+              * Debugging
+              * Synchronous (error conditions)
       * Core Algorithms
           * Moving Memory
           * Arithmetic/Logic

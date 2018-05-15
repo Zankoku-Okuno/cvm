@@ -16,7 +16,7 @@ module Memory
     , dumpSlice
     ) where
 
-import Memory.Base
+import Memory.Internal
 
 import Numeric (showHex)
 import Data.List (intercalate)

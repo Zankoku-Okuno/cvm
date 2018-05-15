@@ -10,6 +10,7 @@ import Data.Binary.Put
 
 import Memory
 import RegisterStack
+import RegisterStack.Internal (_regs)
 
 main :: IO ()
 main = do

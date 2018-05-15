@@ -19,8 +19,10 @@ executable prokaryote-vm
   main-is:             Main.hs
   other-modules:
     Memory,
-    Memory.Base,
-    RegisterStack
+    Memory.Internal,
+    RegisterFile,
+    RegisterStack,
+    RegisterStack.Internal
   -- other-extensions:    
   build-depends:
     array ==0.5.*,
