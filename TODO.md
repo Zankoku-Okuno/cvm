@@ -50,6 +50,18 @@ Are all arithmetic operations safe?
 
 ## To-do
 
+
+Ports are annoying.
+However, I think I can get away with blocking read/write/seek on ports.
+Opening/closing a port is the difficult thing (it requires a port allocator, and needs synchronization).
+However, open/close are not operations that have an analoge in hardware, so I can't draw any inspiration.
+Closing a port is easy, even if it is new.
+Opening a port is the odd thing: at some point, there's going to have to be some sort of centralized port allocator.
+
+What kind of ports can be opened, and how should a program identify the different kinds to the VM?
+I'm thinking that, like operating modes, a machine can keep a list of the available port types by symbol, and the linker will translate port linkages into numbers using that table.
+
+
   * [ ] Machine Design
       * [ ] Memory Architecture
       * IO/FFI Architecture
